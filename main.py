@@ -10,7 +10,7 @@ import random
 
 TILESIZE = 16
 GWIDTH = 80                 # Grid width
-GHEIGHT = 40                # Grid height
+GHEIGHT = 30                # Grid height
 WIDTH = GWIDTH * TILESIZE   # Window width
 HEIGHT = GHEIGHT * TILESIZE  # Window height
 
@@ -117,9 +117,6 @@ def draw_terrain():
              TILESIZE,
              TILESIZE)
         )
-
-
-print(heights)
 
 
 def restart():
