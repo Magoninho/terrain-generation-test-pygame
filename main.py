@@ -9,16 +9,12 @@ import pygame
 import random
 
 TILESIZE = 16
-GWIDTH = 80                 # Grid width
-GHEIGHT = 30                # Grid height
-WIDTH = GWIDTH * TILESIZE   # Window width
+GWIDTH = 80  # Grid width
+GHEIGHT = 30  # Grid height
+WIDTH = GWIDTH * TILESIZE  # Window width
 HEIGHT = GHEIGHT * TILESIZE  # Window height
 
-bgs = [
-    "terraria.png",
-    "terraria2.png",
-    "terraria3.png"
-]
+bgs = ["terraria.png", "terraria2.png", "terraria3.png"]
 
 
 bg = pygame.image.load(bgs[random.randint(0, len(bgs) - 1)])
@@ -54,7 +50,7 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
 # the lerp function used in linear interpolation
 def lerp(v0, v1, t: float):
-    return (1-t)*v0 + t*v1
+    return (1 - t) * v0 + t * v1
 
 
 # using linear interpolation (lerp()) for generating the terrain
@@ -72,57 +68,112 @@ def get_heights(amplitute: int, max_height: int):
         for l in range(4):
             interpolated = int(
                 lerp(
-                    random_values[h], random_values[h +
-                                                    1], ((l+1) * amplitute) / 10   # TODO: fix this later because is weird
+                    random_values[h],
+                    random_values[h + 1],
+                    ((l + 1) * amplitute) / 10,  # TODO: fix this later because is weird
                 )
             )
             final_heights.append(interpolated)
     return final_heights
 
 
+def create_tree(x, y):
+    log_height = 4  # measured in blocks
+    offset = 0
+    # creates tree log
+    for _ in range(log_height):
+        pygame.draw.rect(
+            screen,
+            (100, 0, 0),
+            (x * TILESIZE, (y - offset) * TILESIZE, TILESIZE, TILESIZE),
+        )
+        offset += 1
+
+    # creates the leafs
+    leaf_height = 4
+    leaf_width = 3
+    for h in range(leaf_height):
+        pygame.draw.rect(
+            screen,
+            (0, 100, 0),
+            (x * TILESIZE, (y - offset) * TILESIZE, TILESIZE, TILESIZE),
+        )
+        if leaf_height - h == 1:
+            leaf_width -= 1
+
+        for w in range(leaf_width):
+            pygame.draw.rect(
+                screen,
+                (0, 100, 0),
+                ((x + w) * TILESIZE, (y - offset) * TILESIZE, TILESIZE, TILESIZE),
+            )
+            pygame.draw.rect(
+                screen,
+                (0, 100, 0),
+                ((x - w) * TILESIZE, (y - offset) * TILESIZE, TILESIZE, TILESIZE),
+            )
+
+        offset += 1
+
+
 heights = get_heights(amplitude, max_height)
 
 stone_height = get_heights(3, stone_max_height)
+
+def generate_tree_positions(probability, heights):
+    tree_positions = []
+    for x in range(GWIDTH):
+        y = GHEIGHT - heights[x]
+        if random.randint(0, 100) < probability:
+
+            tree_positions.append([x, y])
+
+            # create_tree(x, GHEIGHT - heights[x])
+            
+    return tree_positions
+
+
+tree_positions = generate_tree_positions(10, heights)
+print(tree_positions)
+def draw_trees():
+    for position in tree_positions:
+        create_tree(position[0], position[1])
 
 
 def draw_terrain():
     h = 0
 
     for x in range(GWIDTH):
-
         for h in range(heights[x]):
             if h < stone_height[x]:
                 pygame.draw.rect(
                     screen,
                     (149, 148, 139),  # gray (stone)
-                    (x * TILESIZE,
-                        HEIGHT - h * TILESIZE,
-                        TILESIZE,
-                        TILESIZE)
+                    (x * TILESIZE, HEIGHT - h * TILESIZE, TILESIZE, TILESIZE),
                 )
             else:
                 pygame.draw.rect(
                     screen,
                     (155, 118, 83),  # brown (dirt)
-                    (x * TILESIZE,
-                        HEIGHT - h * TILESIZE,
-                        TILESIZE,
-                        TILESIZE)
+                    (x * TILESIZE, HEIGHT - h * TILESIZE, TILESIZE, TILESIZE),
                 )
+
         pygame.draw.rect(
             screen,
             (34, 139, 34),  # green (grass)
-            (x * TILESIZE,
-             HEIGHT - h * TILESIZE,
-             TILESIZE,
-             TILESIZE)
+            (x * TILESIZE, HEIGHT - h * TILESIZE, TILESIZE, TILESIZE),
         )
+
+        # if random.randint(0, 100) < 10:
+        #     create_tree(x, GHEIGHT - heights[x])
+            
 
 
 def restart():
-    global heights, stone_height
+    global heights, stone_height, tree_positions
     heights = get_heights(amplitude, max_height)
     stone_height = get_heights(3, stone_max_height)
+    tree_positions = generate_tree_positions(10, heights)
     draw_terrain()
 
 
@@ -142,6 +193,7 @@ while True:
                 restart()
 
     screen.blit(bg, (0, 0))
+    # create_tree(16, 16)
     draw_terrain()
-
+    draw_trees()
     pygame.display.update()
